@@ -2,6 +2,9 @@ if(process.env.NODE_ENV != "production"){
 require('dotenv').config();
 }
 
+const dns = require("dns");
+dns.setServers(["8.8.8.8", "1.1.1.1"]);
+
 
 const express = require("express");
 const app = express();
@@ -23,7 +26,7 @@ const listingsRouter = require("./routes/listing.js");
 const reviewsRouter = require("./routes/reviews.js")
 const userRouter = require("./routes/user.js");
 
-const MONGO_URL = "mongodb://127.0.0.1:27017/wanderlust";
+const MONGO_URL = process.env.ATLASDB_URL;
 //const dbUrl = process.env.ATLASDB_URL;
 
 
@@ -49,7 +52,7 @@ app.engine('ejs', ejsMate);
 app.use(express.static(path.join(__dirname,"/public")));
 
 const sessionOptions = {
-    secret: "mysupersecretstring" ,
+    secret: process.env.SESSION_SECRET,
     resave: false, 
     saveUninitialized: true,
     cookie: {
@@ -62,6 +65,9 @@ const sessionOptions = {
 // app.get("/", (req ,res) =>{
 //     res.send("Hi, I am root");
 // });
+app.get("/", (req, res) => {
+    res.redirect("/listings");
+});
 
 
 app.use(session(sessionOptions));
@@ -96,7 +102,8 @@ app.use((err,req,res,next)=>{
     res.status(statusCode).render("error.ejs",{message});
 
 });
-app.listen(8080, () =>{
-    console.log("server is listening to port 8080");
+const PORT = process.env.PORT || 8080;
 
+app.listen(PORT, "0.0.0.0", () => {
+    console.log(`Server is listening on port ${PORT}`);
 });
